@@ -24,6 +24,7 @@ class ESPCN(object):
                  batch_size,
                  c_dim,
                  test_img,
+                 test_path
                  ):
 
         self.sess = sess
@@ -33,6 +34,7 @@ class ESPCN(object):
         self.scale = scale
         self.batch_size = batch_size
         self.test_img = test_img
+        self.test_path = test_path
         self.build_model()
 
     def build_model(self):
@@ -45,7 +47,7 @@ class ESPCN(object):
                 Because the test need to put image to model,
                 so here we don't need do preprocess, so we set input as the same with preprocess output
             '''
-            data = load_data(self.is_train, self.test_img)
+            data = load_data(self.is_train, self.test_img, self.test_path)
             input_ = imread(data[0])       
             self.h, self.w, c = input_.shape
             self.images = tf.placeholder(tf.float32, [None, self.h, self.w, self.c_dim], name='images')
@@ -149,7 +151,8 @@ class ESPCN(object):
             print("Now Start Testing...")
             result = self.pred.eval({self.images: input_[0].reshape(1, self.h, self.w, self.c_dim)})
             x = np.squeeze(result)
-            checkimage(x)
+            if config.checkimage:
+                checkimage(x)
             print(x.shape)
             imsave(x, config.result_dir+'/result.png', config)
     def load(self, checkpoint_dir):

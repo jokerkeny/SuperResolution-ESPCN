@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-import os 
+import os
 import glob
 import h5py
 
@@ -18,7 +18,7 @@ def imsave(image, path, config):
     if not os.path.isdir(os.path.join(os.getcwd(),config.result_dir)):
         os.makedirs(os.path.join(os.getcwd(),config.result_dir))
 
-    # NOTE: because normial, we need mutlify 255 back    
+    # NOTE: because normial, we need mutlify 255 back
     cv2.imwrite(os.path.join(os.getcwd(),path),image * 255.)
 
 def checkimage(image):
@@ -52,12 +52,12 @@ def preprocess(path ,scale = 3):
     """
         Args:
             path: the image directory path
-            scale: the image need to scale 
+            scale: the image need to scale
     """
     img = imread(path)
 
     label_ = modcrop(img, scale)
-    
+
     input_ = cv2.resize(label_,None,fx = 1.0/scale ,fy = 1.0/scale, interpolation = cv2.INTER_CUBIC) # Resize by scaling factor
 
     kernel_size = (7, 7);
@@ -67,7 +67,7 @@ def preprocess(path ,scale = 3):
 
     return input_, label_
 
-def prepare_data(dataset="Train",Input_img=""):
+def prepare_data(dataset="Train",Input_img="",Input_path=""):
     """
         Args:
             dataset: choose train dataset or test dataset
@@ -79,26 +79,27 @@ def prepare_data(dataset="Train",Input_img=""):
     else:
         if Input_img !="":
             data = [os.path.join(os.getcwd(),Input_img)]
+        elif Input_path !="":
+            data_dir = os.path.join(os.getcwd(),Input_path)
+            data = glob.glob(os.path.join(data_dir, "*"))
         else:
             data_dir = os.path.join(os.path.join(os.getcwd(), dataset), "Set5")
             data = glob.glob(os.path.join(data_dir, "*.bmp")) # make set of all dataset file path
     print(data)
     return data
 
-def load_data(is_train, test_img):
+def load_data(is_train, test_img, test_path):
     if is_train:
         data = prepare_data(dataset="Train")
     else:
-        if test_img != "":
-            return prepare_data(dataset="Test",Input_img=test_img)
-        data = prepare_data(dataset="Test")
+        data = prepare_data(dataset="Test",Input_img=test_img,Input_path=test_path)
     return data
 
 def make_sub_data(data, config):
     """
         Make the sub_data set
         Args:
-            data : the set of all file path 
+            data : the set of all file path
             config : the all flags
     """
     sub_input_sequence = []
@@ -109,7 +110,7 @@ def make_sub_data(data, config):
             h, w, c = input_.shape
         else:
             h, w = input_.shape # is grayscale
-        
+
         if not config.is_train:
             input_ = imread(data[i])
             input_ = input_ / 255.0
@@ -118,7 +119,7 @@ def make_sub_data(data, config):
 
         # NOTE: make subimage of LR and HR
 
-        # Input 
+        # Input
         for x in range(0, h - config.image_size + 1, config.stride):
             for y in range(0, w - config.image_size + 1, config.stride):
 
@@ -138,7 +139,7 @@ def make_sub_data(data, config):
         for x in range(0, h * config.scale - config.image_size * config.scale + 1, config.stride * config.scale):
             for y in range(0, w * config.scale - config.image_size * config.scale + 1, config.stride * config.scale):
                 sub_label = label_[x: x + config.image_size * config.scale, y: y + config.image_size * config.scale] # 17r * 17r
-                
+
                 # Reshape the subinput and sublabel
                 sub_label = sub_label.reshape([config.image_size * config.scale , config.image_size * config.scale, config.c_dim])
                 # Normialize
@@ -156,7 +157,7 @@ def read_data(path):
         Args:
             path: file path of desired file
             data: '.h5' file format that contains  input values
-            label: '.h5' file format that contains label values 
+            label: '.h5' file format that contains label values
     """
     with h5py.File(path, 'r') as hf:
         input_ = np.array(hf.get('input'))
@@ -187,7 +188,7 @@ def input_setup(config):
     """
 
     # Load data path, if is_train False, get test data
-    data = load_data(config.is_train, config.test_img)
+    data = load_data(config.is_train, config.test_img, config.test_path)
 
 
     # Make sub_input and sub_label, if is_train false more return nx, ny
@@ -197,7 +198,7 @@ def input_setup(config):
     # Make list to numpy array. With this transform
     arrinput = np.asarray(sub_input_sequence) # [?, 17, 17, 3]
     arrlabel = np.asarray(sub_label_sequence) # [?, 17 * scale , 17 * scale, 3]
-    
+
     print(arrinput.shape)
     make_data_hf(arrinput, arrlabel, config)
 

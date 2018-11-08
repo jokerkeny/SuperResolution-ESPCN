@@ -29,12 +29,17 @@ python main.py --is_train False
 then result will put in the result directory
 
 
-If you want to Test your own iamge
+If you want to Test your own image
 
 use `test_img` flag
 
 ```
 python main.py --is_train False --test_img Train/t20.bmp
+```
+
+Or, use `test_path` flag
+```
+python main.py --is_train False --test_path testdata_path
 ```
 
 then result image also put in the result directory

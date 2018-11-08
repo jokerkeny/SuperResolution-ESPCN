@@ -13,7 +13,10 @@ flags.DEFINE_float("learning_rate", 1e-5 , "The learning rate")
 flags.DEFINE_integer("batch_size", 128, "the size of batch")
 flags.DEFINE_string("result_dir", "result", "Name of result directory")
 flags.DEFINE_string("test_img", "", "test_img")
+flags.DEFINE_string("test_path", "", "test_path")
 
+
+flags.DEFINE_boolean("checkimage", False, "whether to see the result image")
 
 
 def main(_): #?
@@ -25,6 +28,7 @@ def main(_): #?
                       c_dim = FLAGS.c_dim,
                       batch_size = FLAGS.batch_size,
                       test_img = FLAGS.test_img,
+                      test_path = FLAGS.test_path
                       )
 
         espcn.train(FLAGS)
